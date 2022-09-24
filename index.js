@@ -1,96 +1,77 @@
-const boxes = Array.from(document.getElementsByClassName('box'));
-const playText = document.getElementById('playText');
-const restartBtn = document.getElementById('restartBtn');
-const spaces = [];
-const O_TEXT = "0"
-const X_TEXT = "X"
-let currentPlayer;
+const winningConditions = [
+    [0, 1, 2]
+    [3, 4, 5]
+    [6, 7, 8]
+    [0, 3, 6]
+    [1, 4, 7]
+    [2, 5, 8]
+    [0, 4, 8]
+    [2, 4, 6]
+]
 
-const drawBoard = () => {
-    boxes.forEach((box, index) =>{
-        let styleString = '';
-        if (index < 3) {
-            styleString += `border-bottom: 3px solid var(--purple);`
-        }
-        if(index % 3 == 0) {
-            styleString += `border-right: 3px solid var(--purple);`
-        }
-        if(index % 3 == 2) {
-            styleString += `border-left: 3px solid var(--purple);`
-        }
-        if(index > 5) {
-            styleString += `border-top: 3px solid var(--purple);`
-        }    
-        box.style = styleString;
-        box.addEventListener('click', boxClicked)
-    });
-};
+let boxIndexValues = new Array(9).fill("");
+let nextMove = 'X'
+let gameOver = false;
 
-const boxClicked = (e) => {
-    const id = e.target.id;
-    if (!spaces[id]){
-        spaces[id] = currentPlayer;
-        e.target.innerText = currentPlayer;
+const restartBtn = document.querySelector('#restartBtn');
+const winnerMessageElement = document.querySelector('.winner');
+const nextMoveElement = document.querySelector('.turn');
 
-        if(playerHasWon()){
-            playText.innerText = `${currentPlayer} has won!`;
- 
-            return;
-        }
-        currentPlayer = currentPlayer == O_TEXT ? X_TEXT: O_TEXT
+const winnerMessage = () => `Winner is: ${nextMove}`;
+const nextMoveMessage = () => `Next Move: ${nextMove}`;
+
+document
+    .querySelectorAll(".box")
+    .forEach((box) => 
+        box.addEventListener("click", (event) => handleBoxClick(event))
+        );
+
+function handleBoxClick(event) {
+    const target = event.target;
+    const boxIndex = target.dataset.boxIndex;
+    if(gameOver || boxIndexValues[boxIndex] != "") {
+        return;
+    } else {
+        boxIndexValues[boxIndex] = nextMove;
+        target.innerHTML = nextMove;
+        checkWinner();
+        changeNextMove
     }
-};
+}
 
-const playerHasWon = () => {
-    if(spaces[0] == currentPlayer ){
-        if(spaces[1] == currentPlayer && spaces[2] == currentPlayer) {
-            console.log(`${currentPlayer} wins up top.`);
-            return true;  
-        }   
-        if(spaces[3] == currentPlayer && spaces[6] == currentPlayer) {
-            console.log(`${currentPlayer} wins on the left.`);
-            return true;         
+function changeNextMove() {
+    nextMove = nextMove === 'X' ? '0' : 'X';
+    nextMoveElement.innerHTML = nextMoveMessage()
+}
+
+function checkWinner() {
+    for (let i = 0; i <= 7; i++) {
+        const winningCondition = winningConditions[i];
+        if (
+            boxIndexValues[winningCondition[0]] == "" ||
+            boxIndexValues[winningCondition[1]] == "" ||
+            boxIndexValues[winningCondition[2]] == "" 
+        )   {
+            gameOver = false;
+            continue;
         }
-        if(spaces[4] == currentPlayer && spaces[8] == currentPlayer) {
-        console.log(`${currentPlayer} wins diagonally.`);
-        return true;
+
+        if (
+            boxIndexValues[winningCondition[0]] == boxIndexValues[winningCondition[1]] &&
+            boxIndexValues[winningCondition[1]] == boxIndexValues[winningCondition[2]]
+        ) {
+            gameOver = true;
+            winnerMessageElement.innerHTML = winnerMessage();
+            break;
         }
-    } 
-    if (spaces[8] == currentPlayer){
-        if(spaces[2] == currentPlayer && spaces[5] == currentPlayer) {
-            console.log(`${currentPlayer} wins on the right.`);
-            return true;  
-        }   
-        if(spaces[6] == currentPlayer && spaces[7] == currentPlayer) {
-            console.log(`${currentPlayer} wins on the bottom.`);
-            return true;         
-        }
-    }
-    if(spaces[4] == currentPlayer) {
-        if(spaces[1] == currentPlayer && spaces[7] == currentPlayer) {
-            console.log(`${currentPlayer} wins vertically in the midle.`);
-            return true;         
-        }
-        if(spaces[1] == currentPlayer && spaces[7] == currentPlayer) {
-                console.log(`${currentPlayer} wins vertically in the midle.`);
-                return true;
+
+        if(!boxIndexValues.includes("") && !gameOver) {
+            winnerMessageElement.innerHTML = 'Draw.'
         }
     }
-};
+}
 
-
-const restart = () => {
-    spaces.forEach((space, index) => {
-         spaces[index] = null;
-    });
-    box.forEach((box) => {
-        box.innerText = '';
-    });
-    playText.innerText = `Let's PLay`;
-    currentPlayer = O_TEXT  
-};
-restartBtn.addEventListener('click', restart);
-restart();  
-drawBoard();
-
-
+document.querySelector('.restartBtn').addEventListener('click', function(){
+    window.location.reload();
+    return false;
+});
